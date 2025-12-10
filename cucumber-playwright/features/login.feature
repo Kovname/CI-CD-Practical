@@ -1,6 +1,6 @@
 # language: uk
 @авторизація
-# Test all workflows - trigger 3
+# Test all workflows - final check
 Функціонал: Авторизація користувача
   Як користувач системи
   Я хочу мати можливість увійти в систему

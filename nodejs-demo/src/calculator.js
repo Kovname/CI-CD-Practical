@@ -3,7 +3,7 @@
  * Демонстрація статичного аналізу коду з SonarQube
  */
 
-// Test all workflows - trigger 2
+// Test all workflows - final check
 
 /**
  * Обчислює суму двох чисел
