@@ -3,6 +3,8 @@
  * Демонстрація статичного аналізу коду з SonarQube
  */
 
+// Test comment to trigger Node.js workflow
+
 /**
  * Обчислює суму двох чисел
  * @param {number} a - Перше число
