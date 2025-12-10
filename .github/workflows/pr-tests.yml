@@ -30,7 +30,7 @@ jobs:
 
       - name: 📦 Install dependencies (Node.js demo)
         working-directory: nodejs-demo
-        run: npm ci
+        run: npm install
 
       - name: 🧪 Run unit tests
         working-directory: nodejs-demo

@@ -45,7 +45,7 @@ jobs:
       # Node.js тести
       - name: 📦 Install Node.js dependencies
         working-directory: nodejs-demo
-        run: npm ci
+        run: npm install
 
       - name: 🧪 Run Node.js regression tests
         working-directory: nodejs-demo
