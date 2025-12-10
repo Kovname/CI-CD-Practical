@@ -1,6 +1,6 @@
 # language: uk
 @авторизація
-# Test comment to trigger Cucumber workflow
+# Test all workflows - trigger 3
 Функціонал: Авторизація користувача
   Як користувач системи
   Я хочу мати можливість увійти в систему

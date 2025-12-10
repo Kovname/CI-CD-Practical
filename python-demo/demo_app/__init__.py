@@ -1,2 +1,2 @@
 """Demo App module."""
-# Test comment to trigger Django workflow
+# Test all workflows - trigger 1

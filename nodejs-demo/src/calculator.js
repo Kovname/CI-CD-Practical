@@ -3,7 +3,7 @@
  * Демонстрація статичного аналізу коду з SonarQube
  */
 
-// Test comment to trigger Node.js workflow
+// Test all workflows - trigger 2
 
 /**
  * Обчислює суму двох чисел
