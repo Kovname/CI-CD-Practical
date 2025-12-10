@@ -1,0 +1,104 @@
+# Matrix Testing - Запуск на кількох середовищах
+# Завдання 3 (Сценарій 3): Тестування на різних ОС та версіях
+
+name: Matrix Testing
+
+on:
+  push:
+    branches: [main, master]
+  pull_request:
+    branches: [main, master]
+  workflow_dispatch: # Дозволяє ручний запуск
+
+jobs:
+  # Matrix для Node.js
+  nodejs-matrix:
+    name: 📦 Node.js ${{ matrix.node-version }} on ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+
+    strategy:
+      # Продовжувати інші jobs навіть якщо один провалився
+      fail-fast: false
+      matrix:
+        # Різні операційні системи
+        os: [ubuntu-latest, windows-latest, macos-latest]
+        # Різні версії Node.js
+        node-version: ["18.x", "20.x", "22.x"]
+        # Виключення певних комбінацій (опціонально)
+        exclude:
+          - os: macos-latest
+            node-version: "18.x"
+
+    defaults:
+      run:
+        working-directory: nodejs-demo
+
+    steps:
+      - name: 📥 Checkout repository
+        uses: actions/checkout@v4
+
+      - name: 📦 Set up Node.js ${{ matrix.node-version }}
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node-version }}
+
+      - name: 📦 Install dependencies
+        run: npm ci
+
+      - name: 🧪 Run tests
+        run: npm test
+
+      - name: ✅ Report success
+        run: echo "✅ Node.js ${{ matrix.node-version }} on ${{ matrix.os }} passed!"
+
+  # Matrix для Python
+  python-matrix:
+    name: 🐍 Python ${{ matrix.python-version }} on ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+        python-version: ["3.10", "3.11", "3.12"]
+
+    defaults:
+      run:
+        working-directory: python-demo
+
+    steps:
+      - name: 📥 Checkout repository
+        uses: actions/checkout@v4
+
+      - name: 🐍 Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      - name: 📦 Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: 🧪 Run tests
+        run: python manage.py test
+
+      - name: ✅ Report success
+        run: echo "✅ Python ${{ matrix.python-version }} on ${{ matrix.os }} passed!"
+
+  # Фінальний статус
+  matrix-complete:
+    name: ✅ Matrix Complete
+    runs-on: ubuntu-latest
+    needs: [nodejs-matrix, python-matrix]
+    if: always()
+
+    steps:
+      - name: 📊 Summary
+        run: |
+          echo "# 📊 Matrix Testing Summary" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "| Platform | Result |" >> $GITHUB_STEP_SUMMARY
+          echo "|----------|--------|" >> $GITHUB_STEP_SUMMARY
+          echo "| Node.js Matrix | ${{ needs.nodejs-matrix.result == 'success' && '✅' || '❌' }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Python Matrix | ${{ needs.python-matrix.result == 'success' && '✅' || '❌' }} |" >> $GITHUB_STEP_SUMMARY

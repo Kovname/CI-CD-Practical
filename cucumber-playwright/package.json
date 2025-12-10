@@ -1,0 +1,19 @@
+{
+  "name": "cucumber-playwright-demo",
+  "version": "1.0.0",
+  "description": "BDD Testing with Cucumber and Playwright",
+  "main": "index.js",
+  "scripts": {
+    "test": "cucumber-js",
+    "test:report": "cucumber-js --format html:reports/cucumber-report.html"
+  },
+  "keywords": ["cucumber", "playwright", "bdd", "testing"],
+  "author": "Vladislav",
+  "license": "MIT",
+  "devDependencies": {
+    "@cucumber/cucumber": "^10.3.1",
+    "@playwright/test": "^1.40.0",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.3.3"
+  }
+}

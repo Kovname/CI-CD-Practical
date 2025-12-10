@@ -1,0 +1,49 @@
+# Playwright + Cucumber BDD Tests
+# Завдання 2: Виконувані специфікації
+
+name: Cucumber + Playwright Tests
+
+on:
+  push:
+    branches: [main, master]
+    paths:
+      - "cucumber-playwright/**"
+  pull_request:
+    branches: [main, master]
+    paths:
+      - "cucumber-playwright/**"
+
+jobs:
+  test:
+    name: 🥒 Run Cucumber Tests
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: cucumber-playwright
+
+    steps:
+      - name: 📥 Checkout repository
+        uses: actions/checkout@v4
+
+      - name: 📦 Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "lts/*"
+
+      - name: 📦 Install dependencies
+        run: npm ci
+
+      - name: 🎭 Install Playwright browsers
+        run: npx playwright install --with-deps chromium
+
+      - name: 🥒 Run Cucumber tests
+        run: npm test
+        continue-on-error: true # Продовжити навіть якщо тести падають
+
+      - name: 📊 Upload test report
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: cucumber-report
+          path: cucumber-playwright/reports/
+          retention-days: 30

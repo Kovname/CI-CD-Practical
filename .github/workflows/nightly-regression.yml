@@ -1,0 +1,92 @@
+# Запланований запуск тестів (Nightly Regression)
+# Завдання 3 (Сценарій 2): Регресійне тестування за розкладом
+
+name: Nightly Regression Tests
+
+on:
+  # Запуск за розкладом (cron синтаксис)
+  schedule:
+    # Щоночі о 02:00 UTC (04:00 за Київським часом)
+    - cron: "0 2 * * *"
+
+  # Дозволяє ручний запуск через GitHub UI
+  workflow_dispatch:
+    inputs:
+      test_suite:
+        description: "Тестовий набір для запуску"
+        required: true
+        default: "full"
+        type: choice
+        options:
+          - full
+          - smoke
+          - integration
+
+jobs:
+  regression-tests:
+    name: 🌙 Nightly Regression Suite
+    runs-on: ubuntu-latest
+    timeout-minutes: 60 # Максимальний час виконання
+
+    steps:
+      - name: 📥 Checkout repository
+        uses: actions/checkout@v4
+
+      - name: 📦 Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: 📦 Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      # Node.js тести
+      - name: 📦 Install Node.js dependencies
+        working-directory: nodejs-demo
+        run: npm ci
+
+      - name: 🧪 Run Node.js regression tests
+        working-directory: nodejs-demo
+        run: npm test
+
+      # Python тести
+      - name: 📦 Install Python dependencies
+        working-directory: python-demo
+        run: |
+          pip install -r requirements.txt
+          pip install coverage
+
+      - name: 🧪 Run Django regression tests
+        working-directory: python-demo
+        run: |
+          python manage.py migrate
+          coverage run --source='.' manage.py test
+          coverage report
+
+      - name: 📊 Generate test report
+        if: always()
+        run: |
+          echo "# 🌙 Nightly Regression Report" > $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Дата запуску:** $(date -u '+%Y-%m-%d %H:%M:%S UTC')" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "## Результати:" >> $GITHUB_STEP_SUMMARY
+          echo "- Node.js: ✅" >> $GITHUB_STEP_SUMMARY
+          echo "- Django: ✅" >> $GITHUB_STEP_SUMMARY
+
+  # Сповіщення про результати
+  notify:
+    name: 📧 Send Notification
+    runs-on: ubuntu-latest
+    needs: regression-tests
+    if: always()
+
+    steps:
+      - name: 📧 Notify on failure
+        if: needs.regression-tests.result == 'failure'
+        run: |
+          echo "❌ Регресійні тести не пройшли!"
+          echo "Перевірте https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+          # Тут можна додати інтеграцію зі Slack, Discord, Email тощо

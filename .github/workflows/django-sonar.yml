@@ -1,0 +1,88 @@
+# Django CI/CD with SonarQube
+# Завдання 1: Статичний аналіз коду (Python/Django)
+# Базується на статті: https://dzikriqalam.medium.com/have-a-better-ci-cd-in-github-action-by-using-sonarqube-on-django
+
+name: Django CI + SonarQube
+
+on:
+  push:
+    branches: [main, master, develop]
+    paths:
+      - "python-demo/**"
+  pull_request:
+    branches: [main, master]
+    paths:
+      - "python-demo/**"
+
+jobs:
+  # Job 1: Build та Test
+  build-test:
+    name: 🔨 Build & Test Django
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: python-demo
+
+    steps:
+      - name: 📥 Checkout repository
+        uses: actions/checkout@v4
+
+      - name: 🐍 Set up Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: 📦 Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: 🗄️ Run migrations
+        run: python manage.py migrate
+
+      - name: 🧪 Run tests with coverage
+        run: |
+          coverage run --source='.' manage.py test
+          coverage xml -o coverage.xml
+
+      - name: 📤 Upload coverage report
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-report
+          path: python-demo/coverage.xml
+
+  # Job 2: SonarQube Analysis
+  sonarqube:
+    name: 🔍 SonarQube Analysis
+    runs-on: ubuntu-latest
+    needs: build-test # Залежить від успішного build-test
+    defaults:
+      run:
+        working-directory: python-demo
+
+    steps:
+      - name: 📥 Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0 # Повна історія для аналізу
+
+      - name: 📥 Download coverage report
+        uses: actions/download-artifact@v4
+        with:
+          name: coverage-report
+          path: python-demo
+
+      - name: 🔍 SonarQube Scan
+        uses: sonarsource/sonarqube-scan-action@master
+        with:
+          projectBaseDir: python-demo
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+          SONAR_HOST_URL: ${{ secrets.SONAR_HOST_URL }}
+
+      # Опціонально: Quality Gate Check
+      # - name: 🚦 SonarQube Quality Gate
+      #   uses: sonarsource/sonarqube-quality-gate-action@master
+      #   timeout-minutes: 5
+      #   env:
+      #     SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}

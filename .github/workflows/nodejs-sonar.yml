@@ -1,0 +1,76 @@
+# Node.js CI/CD with SonarQube
+# Завдання 1: Статичний аналіз коду (Node.js)
+# Базується на відео: https://www.youtube.com/watch?v=t-9vbm5bZTE
+
+name: Node.js CI + SonarQube
+
+on:
+  push:
+    branches: [main, master, develop]
+    paths:
+      - "nodejs-demo/**"
+  pull_request:
+    branches: [main, master]
+    paths:
+      - "nodejs-demo/**"
+
+jobs:
+  # Job 1: Build та Test
+  build-test:
+    name: 🔨 Build & Test Node.js
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: nodejs-demo
+
+    steps:
+      - name: 📥 Checkout repository
+        uses: actions/checkout@v4
+
+      - name: 📦 Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "npm"
+          cache-dependency-path: nodejs-demo/package-lock.json
+
+      - name: 📦 Install dependencies
+        run: npm ci
+
+      - name: 🧪 Run tests with coverage
+        run: npm run test:ci
+
+      - name: 📤 Upload coverage report
+        uses: actions/upload-artifact@v4
+        with:
+          name: nodejs-coverage
+          path: nodejs-demo/coverage/
+
+  # Job 2: SonarQube Analysis
+  sonarqube:
+    name: 🔍 SonarQube Analysis
+    runs-on: ubuntu-latest
+    needs: build-test
+    defaults:
+      run:
+        working-directory: nodejs-demo
+
+    steps:
+      - name: 📥 Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: 📥 Download coverage report
+        uses: actions/download-artifact@v4
+        with:
+          name: nodejs-coverage
+          path: nodejs-demo/coverage
+
+      - name: 🔍 SonarQube Scan
+        uses: sonarsource/sonarqube-scan-action@master
+        with:
+          projectBaseDir: nodejs-demo
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+          SONAR_HOST_URL: ${{ secrets.SONAR_HOST_URL }}

@@ -1,0 +1,17 @@
+{
+  "name": "nodejs-demo",
+  "version": "1.0.0",
+  "description": "Node.js Demo for SonarQube CI/CD",
+  "main": "src/index.js",
+  "scripts": {
+    "start": "node src/index.js",
+    "test": "jest --coverage",
+    "test:ci": "jest --coverage --coverageReporters=lcov --coverageReporters=text"
+  },
+  "keywords": ["nodejs", "sonarqube", "ci-cd", "demo"],
+  "author": "Vladislav",
+  "license": "MIT",
+  "devDependencies": {
+    "jest": "^29.7.0"
+  }
+}

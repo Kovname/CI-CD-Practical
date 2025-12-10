@@ -1,0 +1,64 @@
+# Запуск тестів при кожному Pull Request
+# Завдання 3 (Сценарій 1): Автоматизація тестування
+
+name: PR Tests
+
+on:
+  pull_request:
+    # Тригер: при створенні або оновленні Pull Request
+    branches: [main, master, develop]
+    types: [opened, synchronize, reopened]
+
+# Скасувати попередні запуски для того самого PR
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  pr-checks:
+    name: 🔍 PR Quality Checks
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: 📥 Checkout repository
+        uses: actions/checkout@v4
+
+      - name: 📦 Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: 📦 Install dependencies (Node.js demo)
+        working-directory: nodejs-demo
+        run: npm ci
+
+      - name: 🧪 Run unit tests
+        working-directory: nodejs-demo
+        run: npm test
+
+      - name: ✅ All checks passed
+        run: echo "✅ Всі перевірки успішно пройдені! PR готовий до review."
+
+  # Коментар до PR з результатами
+  comment-result:
+    name: 💬 Comment on PR
+    runs-on: ubuntu-latest
+    needs: pr-checks
+    if: always()
+
+    steps:
+      - name: 💬 Post comment
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const status = '${{ needs.pr-checks.result }}' === 'success' ? '✅' : '❌';
+            const message = status === '✅' 
+              ? '**Тести пройшли успішно!** 🎉\nPR готовий до code review.'
+              : '**Тести не пройшли** 😞\nБудь ласка, перевірте логи та виправте помилки.';
+
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: `## ${status} Результати тестування\n\n${message}`
+            });
